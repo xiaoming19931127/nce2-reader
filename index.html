@@ -295,6 +295,7 @@ body{
 }
 
 .mobile-nav-bar{display:none}
+.sidebar-close{display:none}
 
 @media (max-width:900px){
   body{flex-direction:column;position:relative}
@@ -322,6 +323,14 @@ body{
   }
   .menu-btn svg{width:1.2rem;height:1.2rem}
 .menu-btn svg rect{fill:var(--text)}
+  .sidebar-close{
+    display:block;position:absolute;top:0.8rem;right:1rem;z-index:101;
+    background:none;border:none;cursor:pointer;padding:0.3rem;
+    color:var(--text-muted)
+  }
+  .sidebar-close svg{width:1.4rem;height:1.4rem;display:block}
+  .sidebar-close svg path{stroke:var(--text-muted);stroke-width:2;stroke-linecap:round}
+  .sidebar-close:active svg path{stroke:var(--text)}
   .topbar{padding:0.7rem 1rem}
   .topbar .lesson-meta{flex-wrap:wrap}
   .content-area{padding:1.2rem 1rem}
@@ -338,6 +347,9 @@ body{
 <body>
 
 <aside class="sidebar">
+  <button class="sidebar-close" id="sidebarClose" aria-label="关闭目录">
+    <svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>
+  </button>
   <div class="sidebar-header">
     <h2>New Concept English</h2>
     <div class="sub">Book 2 · Practice & Progress</div>
@@ -609,6 +621,11 @@ menuBtn.addEventListener('click', () => {
 
 // Close sidebar when selecting a lesson on mobile
 document.querySelector('.sidebar-nav').addEventListener('click', () => {
+  sidebar.classList.remove('open');
+});
+
+// Close sidebar via X button
+document.getElementById('sidebarClose').addEventListener('click', () => {
   sidebar.classList.remove('open');
 });
 
