@@ -601,14 +601,13 @@ initTheme();
 buildNav();
 if (lessons.length > 0) loadLesson(0);
 
-// --- Mobile: dismiss tooltip on outside tap ---
+// --- Dismiss tooltip on outside tap and scroll ---
 document.addEventListener('click', e => {
-  const tip = document.getElementById('tip');
-  if (tip && tip.classList.contains('show') && !e.target.closest('.vocab')) {
+  if (tip && tip.style.visibility === 'visible' && !e.target.closest('.vocab')) {
     hideTip();
-    activeVocab = null;
   }
 });
+document.addEventListener('scroll', () => { hideTip(); }, true);
 
 // --- Mobile: sidebar toggle ---
 const sidebar = document.querySelector('.sidebar');
