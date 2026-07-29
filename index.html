@@ -527,17 +527,23 @@ function loadLesson(idx) {
     '<div class="english-block"><h3>English</h3><div class="english-title-inline">' + l.title_en + '</div><div class="english-text">' + engMarked + '</div></div>' +
     '<div class="chinese-block"><h3>中文</h3><div class="chinese-text">' + l.chinese + '</div></div>';
 
-  // Attach tooltip events
+  // Attach tooltip events — hover on desktop, click on touch
+  const hasHover = window.matchMedia('(hover: hover)').matches;
   document.querySelectorAll('.vocab').forEach(el => {
-    el.addEventListener('click', e => {
-      e.stopPropagation();
-      e.preventDefault();
-      if (tip && tip.style.visibility === 'visible') {
-        hideTip();
-      } else {
-        showTip(e, el.dataset.tip);
-      }
-    });
+    if (hasHover) {
+      el.addEventListener('mouseenter', e => { showTip(e, el.dataset.tip); });
+      el.addEventListener('mouseleave', () => { hideTip(); });
+    } else {
+      el.addEventListener('click', e => {
+        e.stopPropagation();
+        e.preventDefault();
+        if (tip && tip.style.visibility === 'visible') {
+          hideTip();
+        } else {
+          showTip(e, el.dataset.tip);
+        }
+      });
+    }
   });
 
   updateNav();
