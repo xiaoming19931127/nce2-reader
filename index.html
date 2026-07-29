@@ -249,7 +249,7 @@ body{
   padding:0.4rem 0.7rem;border-radius:6px;
   font-family:'Noto Sans SC',sans-serif;font-size:0.76rem;
   font-weight:400;line-height:1.45;
-  white-space:nowrap;
+  white-space:nowrap;display:flex;align-items:center;gap:0.35rem;
   box-shadow:0 4px 20px oklch(0% 0 0 / 0.18);
   opacity:0;visibility:hidden;
   transition:opacity 0.15s var(--ease-out),visibility 0.15s;
@@ -262,6 +262,12 @@ body{
   top:auto;bottom:100%;border-top-color:transparent;border-bottom-color:var(--text);
 }
 .tooltip-global.show{opacity:1;visibility:visible}
+.tip-speaker{
+  display:none;flex-shrink:0;background:none;border:none;cursor:pointer;
+  padding:0;color:inherit;opacity:0.65;line-height:0;pointer-events:auto;
+}
+.tip-speaker:hover{opacity:1}
+.tip-arrow{position:absolute;top:100%;left:50%;transform:translateX(-50%);border:5px solid transparent;}
 
 .bottom-nav{
   display:flex;justify-content:space-between;
@@ -411,6 +417,7 @@ const lessons = [{"id": 1, "title_en": "A private conversation", "title_cn": "�
 let currentIdx = -1;
 let visited = new Set();
 let tip = null;
+const hasHover = window.matchMedia('(hover: hover)').matches;
 
 function initTheme() {
   const el = document.documentElement;
@@ -429,14 +436,25 @@ function initTheme() {
 function initTip() {
   tip = document.createElement('div');
   tip.className = 'tooltip-global';
-  document.body.appendChild(tip);
-  // arrow
+  tip.style.pointerEvents = 'auto';
+
+  const textSpan = document.createElement('span');
+  textSpan.className = 'tip-text';
+  tip.appendChild(textSpan);
+
+  const speaker = document.createElement('button');
+  speaker.className = 'tip-speaker';
+  speaker.innerHTML = '<svg viewBox="0 0 24 24" width="14" height="14"><path d="M3 9h4l5-4v14l-5-4H3z" fill="currentColor"/><path d="M16 7.5a5 5 0 010 9" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M19 5a8 8 0 010 14" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>';
+  tip.appendChild(speaker);
+
   const arrow = document.createElement('span');
-  arrow.style.cssText = 'position:absolute;top:100%;left:50%;transform:translateX(-50%);border:5px solid transparent;';
+  arrow.className = 'tip-arrow';
   tip.appendChild(arrow);
+
+  document.body.appendChild(tip);
 }
 
-function showTip(e, text) {
+function showTip(e, text, word) {
   if (!tip) initTip();
 
   const CS = getComputedStyle(document.documentElement);
@@ -445,7 +463,15 @@ function showTip(e, text) {
 
   tip.style.background = tipBg;
   tip.style.color = tipFg;
-  tip.textContent = text;
+
+  // Set text and toggle speaker
+  const textSpan = tip.querySelector('.tip-text');
+  const speaker = tip.querySelector('.tip-speaker');
+  textSpan.textContent = text;
+  if (speaker) {
+    speaker.style.display = hasHover && word ? 'inline-flex' : 'none';
+    speaker.onclick = (ev) => { ev.stopPropagation(); if (word) speak(word); };
+  }
 
   // Make visible off-screen to measure
   tip.classList.remove('below');
@@ -474,14 +500,13 @@ function showTip(e, text) {
   if (left < 8) left = 8;
   if (left + tipW > window.innerWidth - 8) left = window.innerWidth - tipW - 8;
 
-  // Update arrow border colors
-  const arrow = tip.querySelector('span');
+  // Update arrow
+  const arrow = tip.querySelector('.tip-arrow');
   if (arrow) {
     arrow.style.borderTopColor = '';
     arrow.style.borderBottomColor = '';
     arrow.style.top = below ? 'auto' : '100%';
     arrow.style.bottom = below ? '100%' : 'auto';
-    // On dark backgrounds, use bg color for arrow
   }
 
   tip.classList.toggle('below', below);
@@ -495,6 +520,15 @@ function hideTip() {
     tip.style.opacity = '0';
     tip.style.visibility = 'hidden';
   }
+}
+
+function speak(word) {
+  if (!word || !window.speechSynthesis) return;
+  window.speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(word);
+  u.lang = 'en-US';
+  u.rate = 0.85;
+  window.speechSynthesis.speak(u);
 }
 
 function buildNav() {
@@ -528,10 +562,10 @@ function loadLesson(idx) {
     '<div class="chinese-block"><h3>中文</h3><div class="chinese-text">' + l.chinese + '</div></div>';
 
   // Attach tooltip events — hover on desktop, click on touch
-  const hasHover = window.matchMedia('(hover: hover)').matches;
   document.querySelectorAll('.vocab').forEach(el => {
+    const word = el.textContent.trim();
     if (hasHover) {
-      el.addEventListener('mouseenter', e => { showTip(e, el.dataset.tip); });
+      el.addEventListener('mouseenter', e => { showTip(e, el.dataset.tip, word); });
       el.addEventListener('mouseleave', () => { hideTip(); });
     } else {
       el.addEventListener('click', e => {
@@ -540,7 +574,8 @@ function loadLesson(idx) {
         if (tip && tip.style.visibility === 'visible') {
           hideTip();
         } else {
-          showTip(e, el.dataset.tip);
+          showTip(e, el.dataset.tip, word);
+          speak(word);
         }
       });
     }
