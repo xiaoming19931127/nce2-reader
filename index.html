@@ -418,6 +418,7 @@ let currentIdx = -1;
 let visited = new Set();
 let tip = null;
 const hasHover = window.matchMedia('(hover: hover)').matches;
+let tipTimer = null;
 
 function initTheme() {
   const el = document.documentElement;
@@ -450,6 +451,10 @@ function initTip() {
   const arrow = document.createElement('span');
   arrow.className = 'tip-arrow';
   tip.appendChild(arrow);
+
+  // Keep tip visible when hovering over it
+  tip.addEventListener('mouseenter', () => { clearTimeout(tipTimer); });
+  tip.addEventListener('mouseleave', () => { hideTip(); });
 
   document.body.appendChild(tip);
 }
@@ -516,6 +521,7 @@ function showTip(e, text, word) {
 }
 
 function hideTip() {
+  clearTimeout(tipTimer);
   if (tip) {
     tip.style.opacity = '0';
     tip.style.visibility = 'hidden';
@@ -565,8 +571,8 @@ function loadLesson(idx) {
   document.querySelectorAll('.vocab').forEach(el => {
     const word = el.textContent.trim();
     if (hasHover) {
-      el.addEventListener('mouseenter', e => { showTip(e, el.dataset.tip, word); });
-      el.addEventListener('mouseleave', () => { hideTip(); });
+      el.addEventListener('mouseenter', e => { clearTimeout(tipTimer); showTip(e, el.dataset.tip, word); });
+      el.addEventListener('mouseleave', () => { tipTimer = setTimeout(hideTip, 200); });
     } else {
       el.addEventListener('click', e => {
         e.stopPropagation();
